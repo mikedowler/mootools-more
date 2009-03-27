@@ -27,6 +27,10 @@ var Drag = new Class({
 		grid: false,
 		style: true,
 		limit: false,
+		startel: handles,
+		startevent: mousedown,
+		endel: document,
+		endevent: mouseup,
 		handle: false,
 		invert: false,
 		preventDefault: false,
@@ -57,12 +61,14 @@ var Drag = new Class({
 	},
 
 	attach: function(){
-		this.handles.addEvent('mousedown', this.bound.start);
+		var startel = (this.options.startel == 'handles') ? this.handles : $(this.options.startel);
+		startel.addEvent(this.options.startevent, this.bound.start);
 		return this;
 	},
 
 	detach: function(){
-		this.handles.removeEvent('mousedown', this.bound.start);
+		var startel = (this.options.startel == 'handles') ? this.handles : $(this.options.startel);
+		startel.removeEvent(this.options.startevent, this.bound.start);
 		return this;
 	},
 
@@ -85,7 +91,9 @@ var Drag = new Class({
 			}
 		}
 		if ($type(this.options.grid) == 'number') this.options.grid = {x: this.options.grid, y: this.options.grid};
-		this.document.addEvents({mousemove: this.bound.check, mouseup: this.bound.cancel});
+		this.document.addEvent('mousemove', this.bound.check);
+		var endel = (this.options.endel == 'document') ? this.document : $(this.options.endel);
+		endel.addEvent(this.options.endevent,  this.bound.cancel);
 		this.document.addEvent(this.selection, this.bound.eventStop);
 	},
 
@@ -94,10 +102,9 @@ var Drag = new Class({
 		var distance = Math.round(Math.sqrt(Math.pow(event.page.x - this.mouse.start.x, 2) + Math.pow(event.page.y - this.mouse.start.y, 2)));
 		if (distance > this.options.snap){
 			this.cancel();
-			this.document.addEvents({
-				mousemove: this.bound.drag,
-				mouseup: this.bound.stop
-			});
+			this.document.addEvent('mousemove', this.bound.drag);
+			var endel = (this.options.endel == 'document') ? this.document : $(this.options.endel);
+			endel.addEvent(this.options.endevent, this.bound.stop);
 			this.fireEvent('start', [this.element, event]).fireEvent('snap', this.element);
 		}
 	},
@@ -125,7 +132,8 @@ var Drag = new Class({
 
 	cancel: function(event){
 		this.document.removeEvent('mousemove', this.bound.check);
-		this.document.removeEvent('mouseup', this.bound.cancel);
+		var endel = (this.options.endel == 'document') ? this.document : $(this.options.endel);
+		endel.removeEvent(this.options.endevent, this.bound.cancel);
 		if (event){
 			this.document.removeEvent(this.selection, this.bound.eventStop);
 			this.fireEvent('cancel', this.element);
@@ -135,7 +143,8 @@ var Drag = new Class({
 	stop: function(event){
 		this.document.removeEvent(this.selection, this.bound.eventStop);
 		this.document.removeEvent('mousemove', this.bound.drag);
-		this.document.removeEvent('mouseup', this.bound.stop);
+		var endel = (this.options.endel == 'document') ? this.document : $(this.options.endel);
+		endel.removeEvent(this.options.endevent, this.bound.stop);
 		if (event) this.fireEvent('complete', [this.element, event]);
 	}
 
