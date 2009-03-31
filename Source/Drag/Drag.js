@@ -44,7 +44,7 @@ var Drag = new Class({
 		this.setOptions(params.options || {});
 		var htype = $type(this.options.handle);
 		this.handles = ((htype == 'array' || htype == 'collection') ? $$(this.options.handle) : $(this.options.handle)) || this.element;
-		this.mouse = {'start': {}, 'offset': {}};
+		this.mouse = {'start': {}, 'now': {}, 'offset': {}};
 		this.value = {'start': {}, 'now': {}};
 
 		this.selection = (Browser.Engine.trident) ? 'selectstart' : 'mousedown';
@@ -75,6 +75,7 @@ var Drag = new Class({
 	start: function(event){
 		if (this.options.preventDefault) event.preventDefault();
 		this.mouse.start = event.page;
+		this.mouse.now = event.page;
 		this.fireEvent('beforeStart', this.element);
 		var limit = this.options.limit;
 		this.limit = {x: [], y: []};
@@ -111,9 +112,10 @@ var Drag = new Class({
 
 	drag: function(event){
 		if (this.options.preventDefault) event.preventDefault();
+		this.mouse.now = event.page;
 		for (var z in this.options.modifiers){
 			if (!this.options.modifiers[z]) continue;
-			this.value.now[z] = event.page[z] - this.mouse.offset[z];
+			this.value.now[z] = this.mouse.now[z] - this.mouse.offset[z];
 			if (this.options.invert) this.value.now[z] *= -1;
 			if (this.options.limit && this.limit[z]){
 				if ($chk(this.limit[z][1]) && (this.value.now[z] > this.limit[z][1])){
