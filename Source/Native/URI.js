@@ -56,35 +56,40 @@ var URI = new Class({
 	initialize: function(uri, options){
 		this.setOptions(options);
 		this.value = uri || document.location.href || '';
-	},
-
-	toString: function(){
-		return this.value;
+		this.parsed = this.parse(this.value);
 	},
 
 	valueOf: function(){
-		return this.value;
+		return this.combine();
 	},
 
 	validate: function(parts, regex){
 		parts = parts || this.options.parts;
-		var bits = this.parse(regex, parts);
 		var valid = parts.every(function(part) {
-			return !!bits[part];
-		});
+			return !!this.parsed[part];
+		}, this);
 		return valid && (this.schemes.contains(bits.scheme) || !bits.scheme);
 	},
 
-	parse: function(regex, parts) {
+	parse: function(value, regex, parts) {
+		value = value || this.value;
 		regex = regex || this.options.regex;
 		parts = parts || this.options.parts;
-		var bits = this.value.match(regex).associate(parts);
+		var match = this.value.match(regex);
+		if (!match) return {};
+		var bits = match.associate(parts);
 		delete bits.full;
 		return bits;
 	},
 
 	set: function(part, value){
-		if (part == "data") return this.setData(value);
+		switch(part){
+			case "data": return this.setData(value);
+			case "value": 
+				this.value = value;
+				this.parse();
+				return this;
+		}
 		var bits = this.parse();
 		bits[part] = value;
 		this.combine(bits);
@@ -92,7 +97,10 @@ var URI = new Class({
 	},
 
 	get: function(part){
-		if (part == "data") return this.getData();
+		switch(part) {
+			case "data": return this.getData();
+			case "value": return this.toString();
+		}
 		return this.parse()[part];
 	},
 
@@ -122,7 +130,7 @@ var URI = new Class({
 			result += wrapped ? wrapped : '';
 		}, this);
 		this.value = result;
-		return this;
+		return this.value;
 	},
 
 	go: function(){
@@ -131,22 +139,6 @@ var URI = new Class({
 
 });
 
-(function(){
-
-	var methods = {};
-
-	new URI().options.parts.each(function(part){
-
-		methods['get' + part.capitalize()] = function(){
-			return this.get(part);
-		};
-
-		methods['set' + part.capitalize()] = function(value){
-			return this.set(part, value);
-		};
-
-	});
-
-	URI.implement(methods);
-
-})();
+URI.prototype.toString = function(){
+	return this.combine();
+};

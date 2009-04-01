@@ -11,6 +11,7 @@ Fx.Morph = new Class({
 	Extends: Fx.CSS,
 
 	initialize: function(element, options){
+		dbug.log('new MORPH! ', element)
 		this.element = this.subject = $(element);
 		this.parent(options);
 	},
@@ -28,7 +29,7 @@ Fx.Morph = new Class({
 	},
 
 	start: function(properties){
-		if (!this.check(arguments.callee, properties)) return this;
+		if (!this.check(properties)) return this;
 		if (typeof properties == 'string') properties = this.search(properties);
 		var from = {}, to = {};
 		for (var p in properties){
